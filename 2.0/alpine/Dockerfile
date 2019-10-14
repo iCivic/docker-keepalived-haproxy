@@ -6,7 +6,13 @@ ENV HAPROXY_URL https://www.haproxy.org/download/2.0/src/haproxy-2.0.6.tar.gz
 ENV HAPROXY_SHA256 01e1da09452010111107ca1b3a8b7f1927731ba0fe4380bacae1c626fdc521e4
 
 # see https://sources.debian.net/src/haproxy/jessie/debian/rules/ for some helpful navigation of the possible "make" arguments
-RUN set -x \
+RUN echo 'http://mirrors.ustc.edu.cn/alpine/v3.10/main' > /etc/apk/repositories \
+    && echo 'http://mirrors.ustc.edu.cn/alpine/v3.10/community' >>/etc/apk/repositories \
+    && apk add -U tzdata \
+    && ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
+    && echo "Asia/Shanghai" > /etc/timezone \
+    && apk del tzdata \
+    && set -x \
 	\
 	&& apk add --no-cache --virtual .build-deps \
 		ca-certificates \
@@ -65,5 +71,13 @@ RUN set -x \
 STOPSIGNAL SIGUSR1
 
 COPY docker-entrypoint.sh /
+RUN chmod +x /docker-entrypoint.sh
+
 ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["haproxy", "-f", "/usr/local/etc/haproxy/haproxy.cfg"]
+## ****************************** 参考资料 *****************************************
+## 制作Docker Image: docker build -t idu/keepalived-haproxy:2.0.6-alpine .
+## docker exec -u root -it idu-fk-haproxy /bin/sh
+## docker cp ./ idu-fk-haproxy:tmp/
+## docker exec -u root -it idu-fk-haproxy /bin/sh
+
